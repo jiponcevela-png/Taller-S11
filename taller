@@ -1,0 +1,272 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 10
+
+typedef struct {
+    int id;
+    char titulo[101];
+    char autor[51];
+    int anio;
+    char estado[11]; 
+} Libro;
+
+void limpiarBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) { }
+}
+
+int existeID(Libro v[], int n, int id) {
+    int i;
+    for (i = 0; i < n; i++) {
+        if (v[i].id == id) return 1;
+    }
+    return 0;
+}
+
+void mostrarTabla(Libro v[], int n) {
+    int i;
+    if (n == 0) {
+        printf("\nNo hay libros registrados.\n");
+        return;
+    }
+
+    printf("\n%-6s | %-35s | %-20s | %-6s | %-10s\n", "ID", "TITULO", "AUTOR", "ANIO", "ESTADO");
+    printf("------ | ----------------------------------- | -------------------- | ------ | ----------\n");
+
+    for (i = 0; i < n; i++) {
+        printf("%-6d | %-35.35s | %-20.20s | %-6d | %-10s\n",
+               v[i].id, v[i].titulo, v[i].autor, v[i].anio, v[i].estado);
+    }
+}
+
+void registrar(Libro v[], int *n) {
+    Libro x;
+
+    if (*n >= MAX) {
+        printf("\nNo se pueden agregar mas de %d libros.\n", MAX);
+        return;
+    }
+
+
+    do {
+        printf("ID (entero unico): ");
+        if (scanf("%d", &x.id) != 1) {
+            printf("Entrada invalida. Ingresa un numero.\n");
+            limpiarBuffer();
+            x.id = -1;
+            continue;
+        }
+        limpiarBuffer();
+
+        if (x.id <= 0) {
+            printf("El ID debe ser positivo.\n");
+        } else if (existeID(v, *n, x.id)) {
+            printf("Ese ID ya existe. Ingresa otro.\n");
+            x.id = -1;
+        }
+    } while (x.id <= 0);
+
+
+    do {
+        printf("Titulo (max 100): ");
+        fgets(x.titulo, 101, stdin);
+        x.titulo[strcspn(x.titulo, "\n")] = 0;
+        if (strlen(x.titulo) == 0) printf("El titulo no puede estar vacio.\n");
+    } while (strlen(x.titulo) == 0);
+
+
+    do {
+        printf("Autor (max 50): ");
+        fgets(x.autor, 51, stdin);
+        x.autor[strcspn(x.autor, "\n")] = 0;
+        if (strlen(x.autor) == 0) printf("El autor no puede estar vacio.\n");
+    } while (strlen(x.autor) == 0);
+
+    do {
+        printf("Anio de publicacion: ");
+        if (scanf("%d", &x.anio) != 1) {
+            printf("Entrada invalida. Ingresa un numero.\n");
+            limpiarBuffer();
+            x.anio = -1;
+            continue;
+        }
+        limpiarBuffer();
+
+        if (x.anio < 0 || x.anio > 2100) {
+            printf("Anio invalido (0 a 2100).\n");
+            x.anio = -1;
+        }
+    } while (x.anio < 0);
+
+ 
+    strcpy(x.estado, "Disponible");
+
+    v[*n] = x;
+    (*n)++;
+
+    printf("\nLibro registrado correctamente.\n");
+}
+
+void mostrarLibro(Libro x) {
+    printf("\n--- DATOS DEL LIBRO ---\n");
+    printf("ID: %d\n", x.id);
+    printf("Titulo: %s\n", x.titulo);
+    printf("Autor: %s\n", x.autor);
+    printf("Anio: %d\n", x.anio);
+    printf("Estado: %s\n", x.estado);
+}
+
+int buscarID(Libro v[], int n, int id) {
+    int i;
+    for (i = 0; i < n; i++) if (v[i].id == id) return i;
+    return -1;
+}
+
+int buscarTitulo(Libro v[], int n, char titulo[]) 
+    int i;
+    for (i = 0; i < n; i++) {
+        if (strcmp(v[i].titulo, titulo) == 0) return i; 
+    return -1;
+}
+
+void buscar(Libro v[], int n) {
+    int op;
+    if (n == 0) {
+        printf("\nNo hay libros registrados.\n");
+        return;
+    }
+
+    printf("\nBuscar por:\n1) ID\n2) Titulo\nOpcion: ");
+    if (scanf("%d", &op) != 1) {
+        printf("Entrada invalida.\n");
+        limpiarBuffer();
+        return;
+    }
+    limpiarBuffer();
+
+    if (op == 1) {
+        int id, idx;
+        printf("Ingresa ID: ");
+        if (scanf("%d", &id) != 1) {
+            printf("Entrada invalida.\n");
+            limpiarBuffer();
+            return;
+        }
+        limpiarBuffer();
+
+        idx = buscarID(v, n, id);
+        if (idx == -1) printf("No se encontro ese ID.\n");
+        else mostrarLibro(v[idx]);
+
+    } else if (op == 2) {
+        char t[101];
+        int idx;
+        printf("Ingresa titulo exacto: ");
+        fgets(t, 101, stdin);
+        t[strcspn(t, "\n")] = 0;
+
+        idx = buscarTitulo(v, n, t);
+        if (idx == -1) printf("No se encontro ese titulo.\n");
+        else mostrarLibro(v[idx]);
+
+    } else {
+        printf("Opcion invalida.\n");
+    }
+}
+
+void actualizarEstado(Libro v[], int n) {
+    int id, idx;
+
+    if (n == 0) {
+        printf("\nNo hay libros registrados.\n");
+        return;
+    }
+
+    printf("ID del libro a cambiar estado: ");
+    if (scanf("%d", &id) != 1) {
+        printf("Entrada invalida.\n");
+        limpiarBuffer();
+        return;
+    }
+    limpiarBuffer();
+
+    idx = buscarID(v, n, id);
+    if (idx == -1) {
+        printf("No se encontro ese ID.\n");
+        return;
+    }
+
+    if (strcmp(v[idx].estado, "Disponible") == 0) strcpy(v[idx].estado, "Prestado");
+    else strcpy(v[idx].estado, "Disponible");
+
+    printf("Estado actualizado: %s\n", v[idx].estado);
+}
+
+void eliminar(Libro v[], int *n) {
+    int id, idx, i;
+
+    if (*n == 0) {
+        printf("\nNo hay libros registrados.\n");
+        return;
+    }
+
+    printf("ID del libro a eliminar: ");
+    if (scanf("%d", &id) != 1) {
+        printf("Entrada invalida.\n");
+        limpiarBuffer();
+        return;
+    }
+    limpiarBuffer();
+
+    idx = buscarID(v, *n, id);
+    if (idx == -1) {
+        printf("No se encontro ese ID.\n");
+        return;
+    }
+
+
+    for (i = idx; i < (*n) - 1; i++) {
+        v[i] = v[i + 1];
+    }
+    (*n)--;
+
+    printf("Libro eliminado correctamente.\n");
+}
+
+int main() {
+    Libro libros[MAX];
+    int n = 0;
+    int op;
+
+    do {
+        printf("\n===== MENU BIBLIOTECA =====\n");
+        printf("1. Registrar libro\n");
+        printf("2. Mostrar lista\n");
+        printf("3. Buscar (ID o Titulo)\n");
+        printf("4. Actualizar estado\n");
+        printf("5. Eliminar libro\n");
+        printf("0. Salir\n");
+        printf("Opcion: ");
+
+        if (scanf("%d", &op) != 1) {
+            printf("Entrada invalida.\n");
+            limpiarBuffer();
+            op = -1;
+            continue;
+        }
+        limpiarBuffer();
+
+        switch (op) {
+            case 1: registrar(libros, &n); break;
+            case 2: mostrarTabla(libros, n); break;
+            case 3: buscar(libros, n); break;
+            case 4: actualizarEstado(libros, n); break;
+            case 5: eliminar(libros, &n); break;
+            case 0: printf("Saliendo...\n"); break;
+            default: printf("Opcion invalida.\n"); break;
+        }
+    } while (op != 0);
+
+    return 0;
+}
